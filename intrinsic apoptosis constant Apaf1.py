@@ -1,4 +1,3 @@
-
 """Monomer Abbreviations"""
 
 # Apaf1 = Apoptotic protease activating factor 1, conc here is representative of activated Apaf1 in apoptosomes
@@ -16,20 +15,65 @@ from pysb.bng import generate_equations
 from pysb.bng import generate_network
 from pysb.simulator import ScipyOdeSimulator
 import pylab as pl
+import pandas as pd
+
+# _______________________________________________________________________________________________________________________________________________________________________________________________#
 
 # Instantiate a model
 Model()
 
-"""Declare Monomers"""
+"""Declare Caspases and related Monomers"""
 Monomer('Apaf1', ['bC9'])
 # create monomer Apaf1 with single binding site for CC
 Monomer('C9', ['bApaf1', 'bXIAP', 'm'], {'m': ['p', 'c']})
 # create monomer C9 with a binding and cleavage site, the cleavage site can be pro (before cleavage, or cleaved (after cleavage)
 Monomer('XIAP', ['bC9C3'])
-# create monomer XIAP with a single binding site for caspase 3, caspase 9, procaspase 3, and procaspase 9, wihch bind competitively
+# create monomer XIAP with a single binding site for caspase 3, caspase 9, procaspase 3, and procaspase 9, wihch bind competitively, inhiitis caspase 3 and 9
 Monomer('C3', ['bXIAP','m'], {'m':['p','c']})
 # create monomer C3 with binding site a for C9, b binding site for XIAP, and c cleavage site with states pro or cleaved
 
+"""Activator Monomers"""
+Monomer('Bid', ['bf', 'state'], {'state':['U', 'T', 'M']})
+# create monomer Bid of the Bcl2 family with states U for untruncated, T for truncated, and M for truncated and in the mitochondria, bf is a binding site for protein protein interactions
+
+"""Effector Monomers"""
+Monomer('Bax', ['bf', 's1', 's2', 'state'], {'state':['C', 'M', 'A']})
+# Bax, states: Cytoplasmic, Mitochondrial, Active
+# sites 's1' and 's2' are used for pore formation, bf is a binding site for protein protein interactions
+Monomer('Bak', ['bf', 's1', 's2', 'state'], {'state': ['M', 'A']})
+# Bak, states: inactive and Mitochondrial, Active (and mitochondrial)
+# sites 's1' and 's2' are used for pore formation, bf is a binding site for protein protein interactions
+
+"""Anti-Apoptotic Monomers"""
+Monomer('Bcl2', ['bf'])
+Monomer('BclxL', ['bf', 'state'], {'state':['C', 'M']})
+Monomer('Mcl1', ['bf', 'state'], {'state':['M', 'C']})
+
+"""Sensitizer Monomers"""
+# C and M stand for cytosolic and mitochondrial states, bf is a binding site for protein protein interactions
+Monomer('Bad', ['bf', 'state'], {'state':['C', 'M']})
+Monomer('Noxa', ['bf', 'state'], {'state': ['C', 'M']})
+
+"""Cytochrome C and Smac"""
+# M is for mitochondrial, C for cytosolic, and A is for active, bf is a binding site for protein protein interactions
+Monomer('CytoC', ['bf', 'state'], {'state': ['M', 'C', 'A']})
+Monomer('Smac', ['bf', 'state'], {'state': ['M', 'C', 'A']})
+
+# ______________________________________________________________________________________________________________________________________________________________________________________________#
+
+
+"""Set Initial Conditions"""
+def declare_initial_conditions():
+    Parameter('Apaf1_0', 20)
+    Parameter('C9p_0', 20)
+    Parameter('XIAP_0', 40)
+    Parameter('C3p_0', 200)
+    Initial(Apaf1(bC9=None), Apaf1_0)
+    Initial(C9(bXIAP=None, bApaf1=None, m='p'), C9p_0)
+    Initial(C3(bXIAP=None, m='p'), C3p_0)
+    Initial(XIAP(bC9C3=None), XIAP_0)
+    Apaf1_num = [5, 6.5, 10, 20]
+    #these are the different concentrations of Apaf1
 
 """Parameters"""
 # Parameters of the forward, reverse and catalysis rate constants listed in order of appearance in rules below
@@ -82,7 +126,7 @@ Parameter('degrade_Apaf1_C9c_XIAP_kd', 1e-03)             # s^-1
 
 
 
-
+# ________________________________________________________________________________________________________________________________________________________________________________________#
 
 """Rules for activated Apaf1 equilibrium binding"""
 #Reaction 1, 8, 12, 10, 13, 14 from paper Bistability in Caspase Activation, 2006, PLoS Computational Biology
@@ -171,7 +215,16 @@ Rule('degrade_Apaf1_C9c', Apaf1(bC9=1) % C9(bXIAP=None, bApaf1=1, m='c') >> None
 Rule('degrade_Apaf1_C9c_XIAP', Apaf1(bC9=1) % C9(bXIAP=2, bApaf1=1, m='c') % XIAP(bC9C3=2) >> None, degrade_Apaf1_C9c_XIAP_kd)
 # Degrade the activated Apaf1 caspase 9 XIAP complex
 
-#print(model.monomers)
+
+# ______________________________________________________________________________________________________________________________________________________________________________________________#
+
+
+"""Set the observables and Setup a Simulation"""
+Observable('ObsC3c', C3(bXIAP=None, m='c'))
+Observable('Apaf1_obs', Apaf1(bC9=None))
+
+
+
 
 generate_network(model)
 generate_equations(model)
@@ -206,31 +259,32 @@ for ode in list(model.odes):
 
 
 """Set the observables and Setup a Simulation"""
-Observable('ObsC3c', C3(bXIAP=None, m='c'))
-#import model as m
-t = pl.linspace(0,4800,num=100)
-simres = ScipyOdeSimulator(model, tspan=t).run()
-yout = simres.all
+# Observable('ObsC3c', C3(bXIAP=None, m='c'))
+# Observable('Apaf1_obs', Apaf1(bC9=None))
 
 
-"""Set Initial Conditions"""
-Parameter('Apaf1_0', 20)
-Parameter('C9p_0', 20)
-Parameter('XIAP_0', 40)
-Parameter('C3p_0', 200)
-Initial(Apaf1(bC9=None), Apaf1_0)
-Initial(C9(bXIAP=None, bApaf1=None, m='p'), C9p_0)
-Initial(C3(bXIAP=None, m='p'), C3p_0)
-Initial(XIAP(bC9C3=None), XIAP_0)
+faddnum = []
+t = pl.linspace(0,4800,4801)
+simres = ScipyOdeSimulator(model, tspan=t)
+simres_result = simres.run(initials = {Apaf1(bC9=None): Apaf1_num})
+simres_df = simres_result.dataframe
+# yout = simres_result.all
+print simres_df['ObsC3c']
 
 
-"""Plot the Observables"""
+
+# """Plot the Observables"""
 pl.ion()
 pl.figure()
-pl.plot(t, yout['ObsC3c'], label='Activated Caspase 3')
-pl.plot(t, yout['__s6'], label='Activated Caspase 3 for real')
-pl.legend()
-pl.xlabel('Time (s)')
-pl.ylabel('Concentration in nM')
-pl.show()
+for n in range(0,4):
+    plt.plot(t/60, simres_df.loc[n]['ObsC3c'].iloc[:], lw=1)
+#pl.plot(t/60, simres_df['ObsC3c'], label='Activated Caspase 3')
+# #pl.plot(t/60, simres.observables['ObsC3c'], label='Activated Caspase 3')
+# pl.plot(t/60, yout['__s6'], label='Activated Caspase 3 for real')
+# pl.plot(t/60, simres.observables['Apaf1_obs'], label='Apaf1')
+# pl.plot(t/60, yout['__s0'], label='Apaf1sp')
+# pl.legend(loc='best')
+# pl.xlabel('Time (s)')
+# pl.ylabel('Concentration in nM')
+# pl.show()
 

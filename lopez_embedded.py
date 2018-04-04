@@ -50,15 +50,15 @@ def Puma_binds_Bcl2_members()
 def p53_upregulates_expression()
     #p53 acts as a transcfription factor to upregulate expression of the following proteins
     #create observable for the concentration of P53 and multiply the upregulated synthesis rates  by the conc of P53
-    Observable('Obs_p53', p53(bf=None, state='C'))
+    Observable('Obs_p53N', p53(bf=None, state='N'))
     #equilirate p53 between the nucleus and the cytoplasm
     Equilibrate(p53(bf=None, state='N'), p53(bf=None, state='C'))
-    Rule('p53_upregulate_Puma', None >> Puma(bf=None, state='C'), upregulate_Puma_ks*Obs_p53)
-    Rule('p53_upregulate_Bax', None >> Bax(bf=None, s1=None, s2=None, state='C'), upregulate_Bax_ks*Obs_p53)
-    Rule('p53_upregulate_Noxa', None >> Noxa(bf=None, state='C'), upregulate_Noxa_ks*Obs_p53)
-    Rule('p53_upregulate_Bak', None >> Bak(bf=None, s1=None, s2=None, state='M'), upregulate_Bak_ks*Obs_p53)
-    Rule('p53_upregulate_Bid', None >> Bid(bf=None, state='U'), upregulate_Bid_ks*Obs_p53)
-    Rule('p53_upregulate_Apaf', None >> Apaf(bf=None, state='I'), upregulate_Apaf_ks*Obs_p53)
+    Rule('p53_upregulate_Puma', None >> Puma(bf=None, state='C'), upregulate_Puma_ks*Obs_p53N)
+    Rule('p53_upregulate_Bax', None >> Bax(bf=None, s1=None, s2=None, state='C'), upregulate_Bax_ks*Obs_p53N)
+    Rule('p53_upregulate_Noxa', None >> Noxa(bf=None, state='C'), upregulate_Noxa_ks*Obs_p53N)
+    Rule('p53_upregulate_Bak', None >> Bak(bf=None, s1=None, s2=None, state='M'), upregulate_Bak_ks*Obs_p53N)
+    Rule('p53_upregulate_Bid', None >> Bid(bf=None, state='U'), upregulate_Bid_ks*Obs_p53N)
+    Rule('p53_upregulate_Apaf', None >> Apaf(bf=None, state='I'), upregulate_Apaf_ks*Obs_p53N)
     #BclxL binds p53 in the cytosol and keeps p53 from upregulated expression of the above proteins
     Rule('BclxL_bind_p53', BclxL(bf=None, state='C') + p53(bf=None, state='C') | BclxL(bf=1, state='C') % p53(bf=1, state='C'))
 

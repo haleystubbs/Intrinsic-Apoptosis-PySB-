@@ -73,6 +73,7 @@ def declare_initial_conditions():
     Initial(C3(bXIAP=None, m='p'), C3p_0)
     Initial(XIAP(bC9C3=None), XIAP_0)
     Apaf1_num = [5, 6.5, 10, 20]
+    alias_model_comopnents()
     #these are the different concentrations of Apaf1
 
 """Parameters"""

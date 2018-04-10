@@ -123,3 +123,32 @@ def BIM_Puma_activate_Bax_and_Bak():
     Rule('Puma_activate_BaxC', Puma(bf=1, state='A') % Bax(bf=1, state='C') >> Puma(bf=None, state='A') + Bax(bf=None, s1=None, s2=None state='M'))
     
 
+
+
+"""Set up a Simulation"""
+
+faddnum = []
+t = pl.linspace(0, 120, 24)
+simres = ScipyOdeSimulator(model, tspan=t)
+simres_result = simres.run(initials={Apaf1(bC9=None): Apaf1_num})
+simres_df = simres_result.dataframe
+# yout = simres_result.all
+print simres_df['ObsC3c']
+
+
+
+
+"""Plot the Observables"""
+pl.ion()
+pl.figure()
+for n in range(0, 4):
+    plt.plot(t / 60, simres_df.loc[n]['ObsC3c'].iloc[:], lw=1)
+    pl.plot(t/60, simres_df['ObsC3c'], label='Activated Caspase 3')
+    pl.plot(t/60, simres.observables['ObsC3c'], label='Activated Caspase 3')
+    pl.plot(t/60, yout['__s6'], label='Activated Caspase 3 for real')
+    pl.plot(t/60, simres.observables['Apaf1_obs'], label='Apaf1')
+    pl.plot(t/60, yout['__s0'], label='Apaf1sp')
+    pl.legend(loc='best')
+    pl.xlabel('Time (s)')
+    pl.ylabel('Concentration in nM')
+    pl.show()

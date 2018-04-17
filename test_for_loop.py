@@ -262,12 +262,12 @@ shared.observables()
 """Set up a Simulation"""
 
 faddnum = []
-simulation_time = pl.linspace(0, 50, 500)
+simulation_time = pl.linspace(0, 49, 49)
 simres = ScipyOdeSimulator(model, tspan=simulation_time).run()
 yout = simres.all
 
-print signal_factor.get_value()
-print yout['Obs_CytC_release']
+# print signal_factor.get_value()
+# print yout['Obs_CytC_release']
 
 """Plot the Observables"""
 pl.ion()
@@ -292,5 +292,33 @@ pl.legend(loc='best')
 pl.xlabel('Time (h)')
 pl.ylabel('Concentration in uM')
 pl.show(block=True)
+
+print yout['Obs_Puma']
+
+"""Convert the simulation data to fold changes and organize into a table to send to pso"""
+# put the observable data into a numpy array
+Puma_data = np.array(yout['Obs_Puma'])
+p53A_data = np.array(yout['Obs_p53A'])
+Bax_data = np.array(yout['Obs_Bax'])
+Bak_data = np.array(yout['Obs_Bak'])
+# take the data at time point 0 and normalize it to a ten fold change, normalize the rest of the data to the same value
+normalize_Puma = Puma_data[48]/10
+normalize_p53A = p53A_data[48]/10
+normalize_Bax  = Bax_data[48]/10
+normalize_Bak  = Bak_data[48]/10
+
+
+# put all the data normalized at the desired time points into the table
+print normalize_Puma
+data = np.array([['','Obs_Puma','Obs_p53A', 'Obs_Bax', 'Obs_Bak'],
+                ['01hr',Puma_data[1]/normalize_Puma,  p53A_data[1]/normalize_p53A,  Bax_data[1]/normalize_Bax,  Bak_data[1]/normalize_Bak],
+                ['06hr',Puma_data[6]/normalize_Puma,  p53A_data[6]/normalize_p53A,  Bax_data[6]/normalize_Bax,  Bak_data[6]/normalize_Bak],
+                ['24hr',Puma_data[24]/normalize_Puma, p53A_data[24]/normalize_p53A, Bax_data[24]/normalize_Bax, Bak_data[24]/normalize_Bak],
+                ['48hr',Puma_data[48]/normalize_Puma, p53A_data[48]/normalize_p53A, Bax_data[48]/normalize_Bax, Bak_data[48]/normalize_Bak]])
+print(pd.DataFrame(data=data[1:,1:],
+                  index=data[1:,0],
+                  columns=data[0,1:]))
+
+
 
 
